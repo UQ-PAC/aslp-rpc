@@ -1,0 +1,195 @@
+#include <cassert>
+#include <chrono>
+#include <csignal>
+#include <filesystem>
+#include <format>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <ranges>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "aslp-cpp/aslp-cpp.hpp"
+
+#include <sys/wait.h>
+#include <unistd.h>
+#include <optional>
+
+#include "httplib.h"
+#include "json.hpp"
+
+std::unordered_map<std::string, std::unique_ptr<aslp_connection>> servers {};
+
+auto find_proc_stat(
+    const std::filesystem::path &path, const std::string &stat) -> std::optional<std::string>
+{
+  std::ifstream stream {path};
+
+  for (std::string line; std::getline(stream, line);) {
+    auto delim = line.find(":");
+    if (delim == std::string::npos) {
+      continue;
+    }
+    std::string left = line.substr(0, delim);
+    if (left != stat) {
+      continue;
+    }
+    auto ndelim = line.find_first_not_of(" \t", delim + 1);
+    if (ndelim == std::string::npos) {
+      continue;
+    }
+    std::string right = line.substr(ndelim);
+    return right;
+  }
+
+  return {};
+}
+
+auto parse_proc_stat(
+    std::filesystem::path p) -> std::unordered_map<std::string, std::string>
+{
+  std::ifstream s {p};
+  std::unordered_map<std::string, std::string> res {};
+
+  for (std::string line; std::getline(s, line);) {
+    auto delim = line.find(":");
+    if (delim == std::string::npos) {
+      continue;
+    }
+    std::string left = line.substr(0, delim);
+    auto ndelim = line.find_first_not_of(" \t", delim + 1);
+    if (ndelim == std::string::npos) {
+      continue;
+    }
+    std::string right = line.substr(ndelim);
+    res[left] = right;
+  }
+
+  return res;
+}
+
+/**
+ * Iterate /proc/$pid/status to find all children of the given process. 
+ */
+auto get_proc_children(std::vector<pid_t>& procs,
+                       pid_t proc,
+                       bool recursive = false) -> std::vector<pid_t>
+{
+  const std::filesystem::path procpath {"/proc/"};
+
+  std::ranges::for_each(
+      std::filesystem::directory_iterator {procpath},
+      [proc, &procs, recursive](const auto& dir_entry)
+      {
+        std::filesystem::path status {dir_entry.path() / "status"};
+        if (std::filesystem::exists(status)
+            && std::filesystem::is_regular_file(status))
+        {
+          auto parent = find_proc_stat(status, "PPid");
+          if (std::stoi(parent.value_or("0")) == proc) {
+            int child = std::stoi(dir_entry.path().filename().string());
+            procs.push_back(child);
+            if (recursive)
+              (get_proc_children(procs, child));
+          }
+        }
+      });
+  return procs;
+}
+
+auto get_proc_children(pid_t proc) -> std::vector<pid_t>
+{
+  std::vector<pid_t> pids {proc};
+  return get_proc_children(pids, proc, /*recursive=*/false);
+}
+
+auto get_proc_children_transitive(pid_t proc) -> std::vector<pid_t>
+{
+  std::vector<pid_t> pids {proc};
+  return get_proc_children(pids, proc, /*recursive=*/true);
+}
+
+std::unique_ptr<aslp_client> aslp_client::start(const std::string& addr,
+                                                int server_port)
+{
+  auto pid = fork();
+
+  if (pid) {
+    return std::unique_ptr<aslp_client> {
+        new aslp_client {pid, addr, server_port}};
+  } else {
+    auto command = std::format(
+        "opam exec -- aslp-server --host {} --port {}", addr, server_port);
+    std::cout << command << std::endl;
+    std::system(command.c_str());
+    std::cout << "Child process exited.";
+    return {nullptr};
+  }
+
+  assert(false);  // unreachable
+  return {nullptr};
+}
+
+
+
+  void aslp_connection::wait_active()
+  {
+    auto req = client->Get("/");
+
+    std::cout << "Waiting for server to start.";
+    while (req.error() != httplib::Error::Success) {
+      std::cout << "." << std::flush;
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      req = client->Get("/");
+    }
+    std::cout << "\n";
+  }
+
+  std::string aslp_connection::get_opcode(int opcode)
+  {
+    auto codestr = std::format("{:#x}", opcode);
+    std::cout << codestr << "\n";
+    const auto params = httplib::Params({{"opcode", codestr}});
+    auto req = client->Get("/", params, httplib::Headers());
+
+    if (req.error() != httplib::Error::Success) {
+      throw std::runtime_error(
+          std::format("Error {}", httplib::to_string(req.error())));
+    }
+
+    auto result = nlohmann::json::parse(req->body);
+
+    if (result.contains("error")) {
+      throw std::runtime_error(result["error"]);
+    }
+    if (!result.contains("semantics")) {
+      throw std::runtime_error(result["semantics missing"]);
+    }
+    return result["semantics"];
+  }
+
+aslp_connection::aslp_connection(const std::string& server_addr,
+                                 int server_port)
+{
+  client = std::make_unique<httplib::Client>(server_addr, server_port);
+}
+
+std::string aslp_client::get_opcode(int opcode)
+{
+  aslp_connection conn {server_addr, server_port};
+  conn.wait_active();
+  return conn.get_opcode(opcode);
+}
+
+void aslp_client::shutdown()
+{
+  auto children = get_proc_children_transitive(server_pid);
+  for (auto c : children) {
+    std::cout << "Killing " << c << "\n";
+    kill(c, SIGINT);
+  }
+  wait(nullptr);
+}
