@@ -141,7 +141,7 @@ void aslp_connection::wait_active()
   std::cout << "Waiting for server to start.";
   while (req.error() != httplib::Error::Success) {
     std::cout << "." << std::flush;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     req = client->Get("/");
   }
   std::cout << "\n";
