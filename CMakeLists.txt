@@ -13,6 +13,7 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
 
 # ---- Declare library ----
 
@@ -23,9 +24,9 @@ add_library(
 add_library(aslp-cpp::aslp-cpp ALIAS aslp-cpp_aslp-cpp)
 
 
-include(cmake/CPM.cmake)
-CPMAddPackage("gh:fmtlib/fmt#10.2.1")
-CPMAddPackage("gh:nlohmann/json@3.11.3")
+# include(cmake/CPM.cmake)
+# CPMAddPackage("gh:fmtlib/fmt#10.2.1")
+# CPMAddPackage("gh:nlohmann/json@3.11.3")
 
 include(GenerateExportHeader)
 generate_export_header(
@@ -63,8 +64,9 @@ target_include_directories(
 
 
 target_include_directories(
-    aslp-cpp_aslp-cpp PRIVATE lib/
-    )
+    aslp-cpp_aslp-cpp PRIVATE 
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/lib>"
+)
 
 target_compile_features(aslp-cpp_aslp-cpp PUBLIC cxx_std_20)
 
