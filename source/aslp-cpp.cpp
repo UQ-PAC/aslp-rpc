@@ -147,7 +147,7 @@ void aslp_connection::wait_active()
   std::cout << "\n";
 }
 
-std::string aslp_connection::get_opcode(uint32_t opcode)
+aslp_opcode_result_t aslp_connection::get_opcode(uint32_t opcode)
 {
   auto codestr = std::format("{:#x}", opcode);
   std::cout << codestr << "\n";
@@ -167,7 +167,10 @@ std::string aslp_connection::get_opcode(uint32_t opcode)
   if (!result.contains("semantics")) {
     throw std::runtime_error("semantics missing");
   }
-  return result["semantics"];
+  if (!result.contains("encoding")) {
+    throw std::runtime_error("encoding name missing");
+  }
+  return {result["encoding"], result["semantics"]};
 }
 
 aslp_connection::aslp_connection(const std::string& server_addr,
@@ -179,7 +182,7 @@ aslp_connection::aslp_connection(const std::string& server_addr,
 aslp_connection::aslp_connection(aslp_connection&&) noexcept = default;
 aslp_connection::~aslp_connection() = default;
 
-std::string aslp_client::get_opcode(uint32_t opcode)
+aslp_opcode_result_t aslp_client::get_opcode(uint32_t opcode)
 {
   aslp_connection conn {server_addr, server_port};
   conn.wait_active();

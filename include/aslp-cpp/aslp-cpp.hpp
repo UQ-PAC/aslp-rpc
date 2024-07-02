@@ -7,6 +7,9 @@ namespace httplib {
 class Client;
 } // namespace httplib;
 
+// tuple of encoding and semantics
+using aslp_opcode_result_t = std::tuple<std::string, std::string>;
+
 class aslp_connection
 {
   std::unique_ptr<httplib::Client> client {nullptr};
@@ -14,7 +17,7 @@ class aslp_connection
 public:
   aslp_connection(const std::string& server_addr, int server_port);
   aslp_connection(aslp_connection&&) noexcept;
-  auto get_opcode(uint32_t opcode) -> std::string;
+  auto get_opcode(uint32_t opcode) -> aslp_opcode_result_t;
   void wait_active();
   ~aslp_connection();
 };
@@ -54,7 +57,7 @@ public:
   auto static start(const std::string& addr, int server_port) -> std::unique_ptr<aslp_client>;
 
   /** Returns the semantics for the given opcode, as a newline-separated string. */
-  auto get_opcode(uint32_t opcode) -> std::string;
+  auto get_opcode(uint32_t opcode) -> aslp_opcode_result_t;
 
   /** Destroys the aslp_client and terminates the managed server as well. */
   virtual ~aslp_client() {
