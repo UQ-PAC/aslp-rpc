@@ -151,7 +151,10 @@ aslp_opcode_result_t aslp_connection::get_opcode(uint32_t opcode)
 {
   auto codestr = std::format("{:#x}", opcode);
   std::cout << codestr << "\n";
-  const auto params = httplib::Params({{"opcode", codestr}});
+  auto params = httplib::Params({{"opcode", codestr}});
+  for (const auto& pair : extra_params) {
+    params.insert(pair);
+  }
   auto req = client->Get("/", params, httplib::Headers());
 
   if (req.error() != httplib::Error::Success) {
@@ -174,10 +177,11 @@ aslp_opcode_result_t aslp_connection::get_opcode(uint32_t opcode)
 }
 
 aslp_connection::aslp_connection(const std::string& server_addr,
-                                 int server_port)
-{
-  client = std::make_unique<httplib::Client>(server_addr, server_port);
-}
+                                 int server_port,
+                                 const params_t& extra_params) :
+  extra_params{extra_params},
+  client{std::make_unique<httplib::Client>(server_addr, server_port)}
+{}
 
 aslp_connection::aslp_connection(aslp_connection&&) noexcept = default;
 aslp_connection::~aslp_connection() = default;
