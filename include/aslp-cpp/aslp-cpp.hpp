@@ -17,8 +17,8 @@ class aslp_connection
 {
   using params_t = std::multimap<std::string, std::string>;
 
-  std::unique_ptr<httplib::Client> client {nullptr};
   const params_t& extra_params;
+  std::unique_ptr<httplib::Client> client {nullptr};
 
 public:
   aslp_connection(const std::string& server_addr, int server_port, const params_t& extra_params = {});
