@@ -1,26 +1,22 @@
 (lang dune 2.8)
 
-(name aslp_server)
-
 (generate_opam_files true)
 
-(source
- (github  UQ-PAC/aslp))
-
-(authors "ailrst")
-(maintainers "ailrst")
-
-(license BSD-3-Clause)
-
-(documentation https://github.com/UQ-PAC/aslp)
 
 (package
  (name aslp_server)
  (synopsis "REST server for ASLp")
  (description "")
+
+(authors "ailrst")
+(maintainers "ailrst")
+
+(license BSD-3-Clause)
+(source
+ (github  ailrst/aslp-rpc))
+(documentation https://github.com/ailrst/aslp-rpc/aslp-server-http )
  (depends 
    ("ocaml" (>= "5.0"))
-     dune
     "eio"
     "cohttp-eio"
     "yojson"
