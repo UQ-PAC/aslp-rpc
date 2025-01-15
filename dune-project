@@ -2,9 +2,8 @@
 
 (generate_opam_files true)
 
-
 (package
- (name aslp_server)
+ (name aslp_server_http)
  (synopsis "REST server for ASLp")
  (description "")
 

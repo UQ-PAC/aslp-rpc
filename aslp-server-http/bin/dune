@@ -1,5 +1,5 @@
 (executable
- (public_name aslp_server)
+ (public_name aslp_server_http)
  (modes exe byte)
  (name main)
  (modules main)
