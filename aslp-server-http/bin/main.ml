@@ -6,6 +6,8 @@ open Asl_ast
 
 (* Lifter wrapper *)
 
+let verbose_opt = ref false
+
 let persistent_env = lazy (Option.get (Arm_env.aarch64_evaluation_environment ()))
 let count = Atomic.make 0
 
@@ -18,6 +20,7 @@ let eval_instr (opcode : string) : string * string =
   let env' = Lazy.force persistent_env in
   let lenv = Dis.build_env env' in
   let decoder = Eval.Env.getDecoder env' (Ident "A64") in
+  if (!verbose_opt) then Eio.traceln "lifting %s" opcode ;
   let enc, stmts =
     Dis.dis_decode_entry_with_inst env' lenv decoder (Z.of_string opcode)
   in
@@ -122,11 +125,16 @@ let speclist =
     ("--port", Arg.Set_int port_opt, "Server port (default 8000)");
     ("--threads", Arg.Set_int threads_opt, "Number of lifter worker threads");
     ("--killserver", Arg.Set killserver, "Tell the server to shut down");
+    ("-v", Arg.Set verbose_opt , "Print each instruction lifted");
   ]
 
+let total_ops = ref 0
 let rec periodic t () =
   Eio.Time.sleep t 5.0;
-  Eio.traceln "lifted %d ops" (Atomic.get count);
+  let c = (Atomic.get count) in
+  Eio.traceln "lifted %f opcodes/s (total %d)" (Float.of_int c /. 5.0) (!total_ops);
+  Atomic.set count 0 ;
+  total_ops := !total_ops + c ;
   periodic t ()
 
 let () =
