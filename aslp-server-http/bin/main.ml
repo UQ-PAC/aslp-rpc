@@ -64,8 +64,6 @@ let get_resp (opcode : string) : Cohttp.Code.status_code * string =
   if String.equal opcode "die" then exit 0;
   get_reply opcode
 
-type 'a work = Decode of (string * ('a, exn) result Eio.Promise.u)
-
 (* Paralellism Structure
 
    We have one cohttp request handler domain and an executor pool of 

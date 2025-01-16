@@ -1,0 +1,23 @@
+
+(library 
+  (name aslp_common)
+  (package aslp_client_server_ocaml)
+  (modules common)
+  (libraries lwt.unix )
+  )
+
+(library
+ (name server)
+ (public_name aslp_client_server_ocaml.server)
+ (modules server)
+ (flags (-w -27))
+ (libraries aslp_common asli.libASL janestreet_lru_cache lwt.unix mtime mtime.clock)
+ )
+
+(library
+ (name client)
+ (public_name aslp_client_server_ocaml.client)
+ (modules client)
+ (libraries aslp_common asli.libASL janestreet_lru_cache lwt.unix mtime mtime.clock)
+)
+
