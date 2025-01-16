@@ -12,9 +12,9 @@
 
 (license BSD-3-Clause)
 (source
- (github  UQ-PAC))
+ (github UQ-PAC/aslp-rpc))
 (documentation https://github.com/ailrst/aslp-rpc/aslp-server-http )
- (depends 
+ (depends
    ("ocaml" (>= "5.0"))
     "eio"
     "cohttp-eio"

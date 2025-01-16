@@ -5,9 +5,9 @@ description: ""
 maintainer: ["ailrst"]
 authors: ["ailrst"]
 license: "BSD-3-Clause"
-homepage: "https://github.com/ailrst/aslp-rpc"
+homepage: "https://github.com/UQ-PAC/aslp-rpc"
 doc: "https://github.com/ailrst/aslp-rpc/aslp-server-http"
-bug-reports: "https://github.com/ailrst/aslp-rpc/issues"
+bug-reports: "https://github.com/UQ-PAC/aslp-rpc/issues"
 depends: [
   "dune" {>= "2.8"}
   "ocaml" {>= "5.0"}
@@ -31,5 +31,5 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/ailrst/aslp-rpc.git"
+dev-repo: "git+https://github.com/UQ-PAC/aslp-rpc.git"
 pin-depends: ["asli.dev" "git+https://github.com/UQ-PAC/aslp.git"]
