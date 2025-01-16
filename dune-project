@@ -12,7 +12,7 @@
 
 (license BSD-3-Clause)
 (source
- (github  ailrst/aslp-rpc))
+ (github  UQ-PAC))
 (documentation https://github.com/ailrst/aslp-rpc/aslp-server-http )
  (depends 
    ("ocaml" (>= "5.0"))
