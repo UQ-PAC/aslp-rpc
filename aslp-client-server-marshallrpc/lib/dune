@@ -11,13 +11,13 @@
  (public_name aslp_client_server_ocaml.aslp_server)
  (modules server)
  (flags (-w -27))
- (libraries aslp_common asli.libASL janestreet_lru_cache lwt.unix mtime mtime.clock)
+ (libraries aslp_common asli.libASL lwt.unix mtime mtime.clock)
  )
 
 (library
  (name client)
  (public_name aslp_client_server_ocaml.aslp_client)
  (modules client)
- (libraries aslp_common asli.libASL janestreet_lru_cache lwt.unix mtime mtime.clock)
+ (libraries aslp_common asli.libASL lwt.unix mtime mtime.clock)
 )
 
