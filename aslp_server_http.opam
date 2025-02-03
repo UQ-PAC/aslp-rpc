@@ -6,7 +6,7 @@ maintainer: ["ailrst"]
 authors: ["ailrst"]
 license: "BSD-3-Clause"
 homepage: "https://github.com/UQ-PAC/aslp-rpc"
-doc: "https://github.com/ailrst/aslp-rpc/aslp-server-http"
+doc: "https://uq-pac.github.io/aslp-rpc/aslp_server_http"
 bug-reports: "https://github.com/UQ-PAC/aslp-rpc/issues"
 depends: [
   "dune" {>= "3.6"}

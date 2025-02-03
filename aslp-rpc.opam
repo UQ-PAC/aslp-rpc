@@ -6,6 +6,7 @@ maintainer: ["ailrst"]
 authors: ["ailrst"]
 license: "Apache-2.0"
 homepage: "https://github.com/UQ-PAC/aslp-rpc"
+doc: "https://uq-pac.github.io/aslp-rpc/"
 bug-reports: "https://github.com/UQ-PAC/aslp-rpc/issues"
 depends: [
   "dune" {>= "3.6"}

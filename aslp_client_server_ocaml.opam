@@ -2,11 +2,11 @@
 opam-version: "2.0"
 version: "0.1"
 synopsis: "ASLP connector using marshalling over a Unix socket"
-description: "ASLP connector using marshalling over a Unix socket"
 maintainer: ["ailrst"]
 authors: ["ailrst"]
 license: "BSD-3-Clause"
 homepage: "https://github.com/UQ-PAC/aslp-rpc"
+doc: "https://uq-pac.github.io/aslp-rpc/aslp_client_server_ocaml"
 bug-reports: "https://github.com/UQ-PAC/aslp-rpc/issues"
 depends: [
   "dune" {>= "3.6"}
