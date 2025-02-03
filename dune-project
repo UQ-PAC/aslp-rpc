@@ -46,6 +46,7 @@
   (depends
     ocaml
     mtime
+    aches
   )
 
   (version 0.1)
