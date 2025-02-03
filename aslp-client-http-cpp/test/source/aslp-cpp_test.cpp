@@ -27,7 +27,8 @@ public:
 
 auto main() -> int
 {
-  auto s = aslp_connection("127.0.0.1", 8000);
+  auto s = aslp_connection("127.0.0.1", 8000, {}, true);
+  s.wait_active();
   auto gen = opgen();
 
   std::chrono::time_point begin = std::chrono::high_resolution_clock::now();
