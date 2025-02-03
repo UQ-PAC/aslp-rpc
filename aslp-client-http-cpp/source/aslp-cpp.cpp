@@ -136,9 +136,20 @@ void aslp_connection::wait_active()
 {
   auto req = client->Get("/");
 
+  unsigned i = 0;
   while (req.error() != httplib::Error::Success) {
+    if (verbose) {
+      if (i == 0) {
+        std::cout << "Waiting for server to start.";
+      }
+      std::cout << "." << std::flush;
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     req = client->Get("/");
+    i++;
+  }
+  if (verbose && i != 0) {
+    std::cout << "\n";
   }
 }
 
@@ -172,8 +183,10 @@ aslp_opcode_result_t aslp_connection::get_opcode(uint32_t opcode)
 
 aslp_connection::aslp_connection(const std::string& server_addr,
                                  int server_port,
-                                 const params_t& extra_params) :
+                                 const params_t& extra_params,
+                                 bool verbose) :
   extra_params{extra_params},
+  verbose{verbose},
   client{std::make_unique<httplib::Client>(server_addr, server_port)}
 {}
 
