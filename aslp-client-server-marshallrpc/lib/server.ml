@@ -1,6 +1,15 @@
 open Aslp_common.Common
 open LibASL
 
+module CK = struct
+  type t = string * int
+
+  let hash = Hashtbl.hash
+  let equal x y = x = y
+end
+
+module Cache = Vache.Map (Vache.LRU_Sloppy) (Vache.Weak) (CK)
+
 (** Client connects automaatically on the first request, to the unix socket
     supplied by environment variable GTIRB_SEM_SOCKET
 
@@ -17,13 +26,19 @@ module InsnLifter = struct
 
   (* number of errors *)
   let decode_instr_fail = ref 0
+  let cache_hits = ref 0
+  let cache_misses = ref 0
+
+  let cache_hit_rate () =
+    let total = Float.of_int !cache_misses +. Float.of_int !cache_hits in
+    if total = 0.0 then 0.0 else Float.of_int !cache_hits /. total
 
   let get_stats () =
     {
       success = !decode_instr_success;
       fail = !decode_instr_fail;
       total = !decode_instr_total;
-      cache_hit_rate = 0.0;
+      cache_hit_rate = cache_hit_rate ();
     }
 
   let env =
@@ -76,9 +91,23 @@ module InsnLifter = struct
     in
     Result.map fst (do_dis ())
 
-  let to_asli ?(cache = true) (opcode_be : string) (addr : int) :
+  let aches_cache = Cache.create 5000
+
+  let to_asli_cache (opcode_be : string) (addr : int) :
       (string list, dis_error) result =
-    to_asli_impl opcode_be addr
+    let k = (opcode_be, addr) in
+    let x = Cache.find_opt aches_cache k in
+    match x with
+    | Some x ->
+        cache_hits := !cache_hits + 1;
+        x
+    | None ->
+        let v = to_asli_impl opcode_be addr in
+        Cache.replace aches_cache k v;
+        cache_misses := !cache_misses + 1;
+        v
+
+  let to_asli ?(cache = true) = if cache then to_asli_cache else to_asli_impl
 end
 
 let lift_opcode ?(cache = true) ~(opcode_be : string) (addr : int) :
@@ -180,5 +209,4 @@ end
 
 let set_addr ~filename = Rpc.set_addr filename
 let start_server () = Server.start_server ()
-  let get_local_lifter_stats () = InsnLifter.get_stats ()
-
+let get_local_lifter_stats () = InsnLifter.get_stats ()
