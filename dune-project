@@ -12,7 +12,7 @@
 (package 
   (name aslp-rpc)
   (synopsis "ASLp RPC libraries")
-  (version 0.1)
+  (version 0.1.0)
   (authors "ailrst")
   (maintainers "ailrst")
   (license Apache-2.0)
@@ -23,13 +23,12 @@
  (name aslp_server_http)
  (documentation https://uq-pac.github.io/aslp-rpc/aslp_server_http)
  (synopsis "REST server for ASLp")
- (version 0.1)
+ (version 0.1.0)
  (authors "ailrst")
  (maintainers "ailrst")
+ (source (github UQ-PAC/aslp-rpc))
 
  (license BSD-3-Clause)
- (source
- (github UQ-PAC/aslp-rpc))
  (depends
    ("ocaml" (>= "5.0"))
     "eio"
@@ -48,8 +47,8 @@
     mtime
     aches
   )
-
-  (version 0.1)
+  (version 0.1.1)
+  (source (github UQ-PAC/aslp-rpc))
   (authors "ailrst")
   (maintainers "ailrst")
   (license BSD-3-Clause)
