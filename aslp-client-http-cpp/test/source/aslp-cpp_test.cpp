@@ -33,9 +33,6 @@ auto main() -> int
 
   std::chrono::time_point begin = std::chrono::high_resolution_clock::now();
 
-  auto add_mask = 0b00010001111111111111111111111111 ;
-  auto add_set = 0b01000000000000000000000000000000 ;
-
   for (int i = 0; i < 50000; i++) {
     std::string c;
     auto op = gen.get();
