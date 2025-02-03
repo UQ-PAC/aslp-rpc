@@ -24,6 +24,7 @@
    ("ocaml" (>= "5.0"))
     "eio"
     "cohttp-eio"
+    "eio_main"
     "yojson"
     "asli"
  )

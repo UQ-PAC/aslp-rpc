@@ -1,0 +1,44 @@
+lib: [
+  "_build/install/default/lib/aslp_client_server_ocaml/META"
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.a" {"aslp_client/client.a"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cma" {"aslp_client/client.cma"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cmi" {"aslp_client/client.cmi"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cmt" {"aslp_client/client.cmt"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cmti" {"aslp_client/client.cmti"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cmx" {"aslp_client/client.cmx"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cmxa" {"aslp_client/client.cmxa"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.ml" {"aslp_client/client.ml"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.mli" {"aslp_client/client.mli"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.a" {"aslp_common/aslp_common.a"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.cma" {"aslp_common/aslp_common.cma"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.cmi" {"aslp_common/aslp_common.cmi"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.cmt" {"aslp_common/aslp_common.cmt"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.cmx" {"aslp_common/aslp_common.cmx"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.cmxa" {"aslp_common/aslp_common.cmxa"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.ml" {"aslp_common/aslp_common.ml"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common__Common.cmi" {"aslp_common/aslp_common__Common.cmi"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common__Common.cmt" {"aslp_common/aslp_common__Common.cmt"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common__Common.cmx" {"aslp_common/aslp_common__Common.cmx"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/common.ml" {"aslp_common/common.ml"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.a" {"aslp_server/server.a"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cma" {"aslp_server/server.cma"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cmi" {"aslp_server/server.cmi"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cmt" {"aslp_server/server.cmt"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cmti" {"aslp_server/server.cmti"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cmx" {"aslp_server/server.cmx"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cmxa" {"aslp_server/server.cmxa"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.ml" {"aslp_server/server.ml"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.mli" {"aslp_server/server.mli"}
+  "_build/install/default/lib/aslp_client_server_ocaml/dune-package"
+  "_build/install/default/lib/aslp_client_server_ocaml/opam"
+]
+libexec: [
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_client/client.cmxs" {"aslp_client/client.cmxs"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_common/aslp_common.cmxs" {"aslp_common/aslp_common.cmxs"}
+  "_build/install/default/lib/aslp_client_server_ocaml/aslp_server/server.cmxs" {"aslp_server/server.cmxs"}
+]
+doc: [
+  "_build/install/default/doc/aslp_client_server_ocaml/CHANGES.md"
+  "_build/install/default/doc/aslp_client_server_ocaml/LICENSE"
+  "_build/install/default/doc/aslp_client_server_ocaml/README.md"
+]
