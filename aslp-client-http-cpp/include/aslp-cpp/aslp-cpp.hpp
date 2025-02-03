@@ -18,10 +18,11 @@ class aslp_connection
   using params_t = std::multimap<std::string, std::string>;
 
   const params_t& extra_params;
+  bool verbose;
   std::unique_ptr<httplib::Client> client {nullptr};
 
 public:
-  aslp_connection(const std::string& server_addr, int server_port, const params_t& extra_params = {});
+  aslp_connection(const std::string& server_addr, int server_port, const params_t& extra_params = {}, bool verbose = false);
   aslp_connection(aslp_connection&&) noexcept;
   auto get_opcode(uint32_t opcode) -> aslp_opcode_result_t;
   void wait_active();
