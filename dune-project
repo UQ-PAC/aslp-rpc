@@ -8,10 +8,21 @@
 (source
 (github UQ-PAC/aslp-rpc))
 
+
+
+(package 
+  (name aslp-rpc)
+  (synopsis "ASLp RPC libraries")
+  (version 0.1)
+  (authors "ailrst")
+  (maintainers "ailrst")
+  (license Apache-2.0)
+  (allow_empty)
+ )
+
 (package
  (name aslp_server_http)
  (synopsis "REST server for ASLp")
- (description "")
  (version 0.1)
  (authors "ailrst")
  (maintainers "ailrst")
@@ -38,7 +49,6 @@
  
   (name aslp_client_server_ocaml)
   (synopsis "ASLP connector using marshalling over a Unix socket")
-  (description "ASLP connector using marshalling over a Unix socket")
   (depends ocaml)
 )
 
