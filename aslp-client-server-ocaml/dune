@@ -11,7 +11,7 @@
  (public_name aslp_client_server_ocaml.aslp_server)
  (modules server)
  (flags (-w -27))
- (libraries aslp_common asli.libASL lwt.unix mtime mtime.clock aches.vache)
+ (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
  )
 
 (library

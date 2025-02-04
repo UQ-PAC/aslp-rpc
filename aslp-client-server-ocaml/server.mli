@@ -14,9 +14,12 @@ val start_server : unit -> unit
 val lift_opcode : ?cache:bool -> opcode_be:string -> int -> opcode_sem
 (** Invoke the lifter directly to lift an opcode *)
 
+(* Lift an opcode directly using the offline lifer. This is substantially faster but 
+produces more verbose code. *)
+val lift_opcode_offline_lifter :
+  opcode_le:string -> int -> (string list, dis_error) result
+
 type stats = { success : int; fail : int; total : int; cache_hit_rate : float }
 
-(**
-   Return statistics on the number of opcodes lifted through lift_opcode.
-*)
 val get_local_lifter_stats : unit -> stats
+(** Return statistics on the number of opcodes lifted through lift_opcode. *)
