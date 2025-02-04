@@ -1,4 +1,8 @@
 
+## v0.1.2 (2025-02-04)
+
+aslp_client_server_ocaml: Add offline-lifter support to server
+
 ## v0.1.1 (2025-02-04) 
 
 aslp_client_server_ocaml: Add in-memory cache on server side.
