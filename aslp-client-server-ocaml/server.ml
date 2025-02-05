@@ -1,8 +1,28 @@
 open Aslp_common.Common
 open LibASL
 
+module Opcode = struct
+  type t = Int32.t
+
+  let to_hex_string (opcode : t) : string = Printf.sprintf "0x%08lx" opcode
+
+  let to_le_bytes (opcode : t) : string =
+    let bytes = Bytes.create 4 in
+    Bytes.set_int32_le bytes 0 opcode;
+    String.of_bytes bytes
+
+  let pp = to_hex_string
+  let of_be_bytes (bytes : string) : t = String.get_int32_be bytes 0
+
+  let pp_bytes_le (opcode : t) : string =
+    let opcode_le = to_le_bytes opcode in
+    let p_byte (b : char) = Printf.sprintf "%02X" (Char.code b) in
+    List.of_seq (String.to_seq opcode_le)
+    |> List.map p_byte |> String.concat " "
+end
+
 module CK = struct
-  type t = string * int
+  type t = Opcode.t * int
 
   let hash = Hashtbl.hash
   let equal x y = x = y
@@ -10,19 +30,26 @@ end
 
 module Cache = Vache.Map (Vache.LRU_Sloppy) (Vache.Weak) (CK)
 
+module OpcodeSet = Set.Make (Int32)
 (** Client connects automaatically on the first request, to the unix socket
     supplied by environment variable GTIRB_SEM_SOCKET
 
     Otherwise the default socket is ./aslp_rpc_socket *)
 
-type stats = { success : int; fail : int; total : int; cache_hit_rate : float }
+type stats = {
+  success : int; (* number of requests which returned instruction semantics *)
+  fail : int; (* number of requests which returned a lifter error*)
+  total_lifter_calls : int;
+      (* number of times the lifter was invoked (cache-misses) *)
+  cache_hit_rate : float; (* hit-rate for the in-memory instruction cache *)
+  unique_failing_opcodes_le : Opcode.t list;
+      (* the list of opcodes which produced lifter errors for lifetime of the server *)
+}
 
 module InsnLifter = struct
   (* number of cache misses *)
   let decode_instr_success = ref 0
-
-  (* number of serviced decode requests*)
-  let decode_instr_total = ref 0
+  let failures = ref OpcodeSet.empty
 
   (* number of errors *)
   let decode_instr_fail = ref 0
@@ -37,8 +64,9 @@ module InsnLifter = struct
     {
       success = !decode_instr_success;
       fail = !decode_instr_fail;
-      total = !decode_instr_total;
+      total_lifter_calls = !cache_misses;
       cache_hit_rate = cache_hit_rate ();
+      unique_failing_opcodes_le = OpcodeSet.to_list !failures;
     }
 
   let env =
@@ -51,68 +79,74 @@ module InsnLifter = struct
              correctly?";
           exit 1)
 
-  let to_asli_impl (opcode_be : string) (addr : int) :
+  let disas_result ~(opcode : Opcode.t) (f : unit -> Asl_ast.stmt list) :
       (string list, dis_error) result =
     let p_raw a =
       Utils.to_string (Asl_parser_pp.pp_raw_stmt a) |> String.trim
     in
-    let p_pretty a = Asl_utils.pp_stmt a |> String.trim in
-    let p_byte (b : char) = Printf.sprintf "%02X" (Char.code b) in
+    let opnum_str = Opcode.to_hex_string opcode in
+    match f () with
+    | res -> Ok (List.map p_raw res)
+    | exception exc ->
+        if not @@ OpcodeSet.mem opcode !failures then (
+          Printf.eprintf
+            "error during aslp disassembly (unsupported opcode %s, bytes %s) \
+             :: %s\n"
+            opnum_str
+            (Opcode.pp_bytes_le opcode)
+            (Printexc.to_string exc);
+          failures := OpcodeSet.add opcode !failures);
+        (* Printexc.print_backtrace stderr; *)
+        Error { opcode = opnum_str; error = Printexc.to_string exc }
+
+  let to_asli_impl (opcode : Opcode.t) (addr : int) :
+      (string list, dis_error) result =
     let address = Some (string_of_int addr) in
 
     (* below, opnum is the numeric opcode (necessarily BE) and opcode_* are always LE. *)
     (* TODO: change argument of to_asli to follow this convention. *)
-    let opnum = Int32.to_int String.(get_int32_be opcode_be 0) in
-    let opnum_str = Printf.sprintf "0x%08lx" Int32.(of_int opnum) in
-
-    let opcode_list : char list =
-      List.(rev @@ of_seq @@ String.to_seq opcode_be)
+    let do_dis () =
+      Dis.retrieveDisassembly ?address (Lazy.force env)
+        (Dis.build_env (Lazy.force env))
+        (Opcode.to_hex_string opcode)
     in
-    let opcode_str = String.concat " " List.(map p_byte opcode_list) in
-    let _opcode : bytes = Bytes.of_seq List.(to_seq opcode_list) in
-
-    let do_dis () : (string list * string list, dis_error) result =
-      match
-        Dis.retrieveDisassembly ?address (Lazy.force env)
-          (Dis.build_env (Lazy.force env))
-          opnum_str
-      with
-      | res ->
-          decode_instr_success := !decode_instr_success + 1;
-          Ok (List.map p_raw res, List.map p_pretty res)
-      | exception exc ->
-          Printf.eprintf
-            "error during aslp disassembly (unsupported opcode %s, bytes %s):\n\n\
-             Exception : %s\n"
-            opnum_str opcode_str (Printexc.to_string exc);
-          decode_instr_fail := !decode_instr_fail + 1;
-          (* Printexc.print_backtrace stderr; *)
-          Error { opcode = opnum_str; error = Printexc.to_string exc }
-    in
-    Result.map fst (do_dis ())
+    disas_result ~opcode do_dis
 
   let aches_cache = Cache.create 5000
 
-  let to_asli_cache (opcode_be : string) (addr : int) :
+  let count_res (r : opcode_sem) =
+    (match r with
+    | Ok _ -> decode_instr_success := !decode_instr_success + 1
+    | Error _ -> decode_instr_fail := !decode_instr_fail + 1);
+    r
+
+  let to_asli_cache (opcode : Opcode.t) (addr : int) :
       (string list, dis_error) result =
-    let k = (opcode_be, addr) in
+    let k = (opcode, addr) in
     let x = Cache.find_opt aches_cache k in
     match x with
     | Some x ->
         cache_hits := !cache_hits + 1;
         x
     | None ->
-        let v = to_asli_impl opcode_be addr in
+        let v = to_asli_impl opcode addr in
         Cache.replace aches_cache k v;
         cache_misses := !cache_misses + 1;
         v
 
-  let to_asli ?(cache = true) = if cache then to_asli_cache else to_asli_impl
+  let to_asli ?(cache = true) opcode_le addr =
+    (if cache then to_asli_cache else to_asli_impl) opcode_le addr |> count_res
 end
 
-let lift_opcode ?(cache = true) ~(opcode_be : string) (addr : int) :
+let lift_opcode ?(cache = true) ~(opcode : Opcode.t) (addr : int) :
     (string list, dis_error) result =
-  InsnLifter.to_asli ~cache opcode_be addr
+  InsnLifter.to_asli ~cache opcode addr
+
+let lift_opcode_offline_lifter ~(opcode : Opcode.t) (addr : int) :
+    (string list, dis_error) result =
+  let op = Primops.mkBits 32 (Z.of_int32 opcode) in
+  let do_dis () = OfflineASL_pc.Offline.run ~pc:addr op in
+  InsnLifter.disas_result ~opcode do_dis |> InsnLifter.count_res
 
 module Server = struct
   let shutdown = ref false
@@ -141,12 +175,16 @@ module Server = struct
             shutdown := true;
             stop ()
         | Lift { addr; opcode_be } ->
-            let lifted : opcode_sem = InsnLifter.to_asli opcode_be addr in
+            let opcode = Opcode.of_be_bytes opcode_be in
+            let lifted : opcode_sem = InsnLifter.to_asli opcode addr in
             let resp : Rpc.msg_resp = Ok lifted in
             Lwt_io.write_value oc resp
         | LiftAll ops ->
             let lifted =
-              List.map (fun (op, addr) -> InsnLifter.to_asli op addr) ops
+              List.map
+                (fun (op, addr) ->
+                  InsnLifter.to_asli (Opcode.of_be_bytes op) addr)
+                ops
             in
             let resp : Rpc.msg_resp = All lifted in
             Lwt_io.write_value oc resp
