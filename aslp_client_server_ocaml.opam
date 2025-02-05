@@ -13,6 +13,8 @@ depends: [
   "ocaml"
   "mtime"
   "aches"
+  "asli"
+  "aslp_offline"
   "odoc" {with-doc}
 ]
 build: [

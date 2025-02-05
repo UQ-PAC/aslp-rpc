@@ -33,4 +33,3 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/UQ-PAC/aslp-rpc.git"
-pin-depends: ["asli.dev" "git+https://github.com/UQ-PAC/aslp.git"]
