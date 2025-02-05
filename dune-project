@@ -46,6 +46,8 @@
     ocaml
     mtime
     aches
+    asli
+    aslp_offline
   )
   (version 0.1.2)
   (source (github UQ-PAC/aslp-rpc))
