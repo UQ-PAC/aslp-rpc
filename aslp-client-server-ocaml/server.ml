@@ -66,7 +66,7 @@ module InsnLifter = struct
       fail = !decode_instr_fail;
       total_lifter_calls = !cache_misses;
       cache_hit_rate = cache_hit_rate ();
-      unique_failing_opcodes_le = OpcodeSet.to_list !failures;
+      unique_failing_opcodes_le = OpcodeSet.to_seq !failures |> List.of_seq;
     }
 
   let env =

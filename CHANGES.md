@@ -1,4 +1,14 @@
 
+## v0.1.3
+
+#### aslp_client_server_ocaml:
+
+- fix ocaml4 support
+- update dependencies
+
+#### aslp_server_http
+
+- remove pin dependencies
 
 ## v0.1.2 (2024-02-05)
 
