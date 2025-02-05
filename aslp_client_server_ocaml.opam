@@ -13,6 +13,7 @@ depends: [
   "ocaml"
   "mtime"
   "aches"
+  "lwt"
   "asli"
   "aslp_offline"
   "odoc" {with-doc}

@@ -9,7 +9,7 @@
 
 (documentation https://uq-pac.github.io/aslp-rpc/)
 
-(package 
+(package
   (name aslp-rpc)
   (synopsis "ASLp RPC libraries")
   (version 0.1.0)
@@ -46,6 +46,7 @@
     ocaml
     mtime
     aches
+    lwt
     asli
     aslp_offline
   )
