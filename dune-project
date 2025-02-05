@@ -48,6 +48,7 @@
     aches
     asli
     aslp_offline
+    lwt
   )
   (version 0.1.2)
   (source (github UQ-PAC/aslp-rpc))

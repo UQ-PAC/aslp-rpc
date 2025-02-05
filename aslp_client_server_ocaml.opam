@@ -15,6 +15,7 @@ depends: [
   "aches"
   "asli"
   "aslp_offline"
+  "lwt"
   "odoc" {with-doc}
 ]
 build: [
