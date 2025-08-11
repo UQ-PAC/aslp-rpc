@@ -88,14 +88,17 @@ module OfflineLifter : Lifter = struct
   let lift ?(address : int option) (opcode : Opcode.t) :
       (Asl_ast.stmt list, dis_error) result =
     let op = Primops.mkBits 32 (Z.of_int32 opcode) in
-    protect opcode (fun () ->
-        let address =
-          match address with
-          | Some x -> x
-          | None ->
-              raise (LifterError "Offline lifter requires opcode address set")
-        in
-        OfflineASL_pc.Offline.run ~pc:address op)
+    let address =
+      Option.to_result
+        ~none:
+          {
+            opcode = Opcode.to_hex_string opcode;
+            error = "Offline lifter requires opcode address set";
+          }
+        address
+    in
+    Result.bind address (fun address ->
+        protect opcode (fun () -> OfflineASL_pc.Offline.run ~pc:address op))
 end
 
 module OnlineLifter : Lifter = struct
@@ -136,22 +139,31 @@ end
 
 module Cache = Vache.Map (Vache.LRU_Sloppy) (Vache.Weak) (CK)
 
-module Cached (L : Lifter) = struct
+type stats = {
+  success : int; (* number of requests which returned instruction semantics *)
+  fail : int; (* number of requests which returned a lifter error*)
+  total_lifter_calls : int;
+      (* number of times the lifter was invoked (cache-misses) *)
+  cache_hit_rate : float; (* hit-rate for the in-memory instruction cache *)
+  unique_failing_opcodes_le : Opcode.t list;
+      (* the list of opcodes which produced lifter errors for lifetime of the server *)
+}
+
+module type CachedLifter = sig
+  include Lifter
+
+  val cache_hit_rate : unit -> float
+  val get_stats : unit -> stats
+  val cache_hits : int ref
+  val cache_misses : int ref
+end
+
+module Cached (L : Lifter) : CachedLifter = struct
   let cache_hits = ref 0
   let cache_misses = ref 0
   let aches_cache = Cache.create 5000
 
   include L
-
-  type stats = {
-    success : int; (* number of requests which returned instruction semantics *)
-    fail : int; (* number of requests which returned a lifter error*)
-    total_lifter_calls : int;
-        (* number of times the lifter was invoked (cache-misses) *)
-    cache_hit_rate : float; (* hit-rate for the in-memory instruction cache *)
-    unique_failing_opcodes_le : Opcode.t list;
-        (* the list of opcodes which produced lifter errors for lifetime of the server *)
-  }
 
   let cache_hit_rate () =
     let total = Float.of_int !cache_misses +. Float.of_int !cache_hits in
@@ -183,4 +195,3 @@ module Cached (L : Lifter) = struct
 end
 
 module CachedOnlineLifter = Cached (OnlineLifter)
-module Test : Lifter = Cached (OnlineLifter)
