@@ -4,15 +4,24 @@
   (public_name aslp_client_server_ocaml.aslp_common)
   (modules common)
   (libraries lwt.unix )
-  )
+ )
+
+
+(library
+ (name lifter)
+ (public_name aslp_client_server_ocaml.lifter)
+ (modules lifter)
+ (flags (-w -27))
+ (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
+)
 
 (library
  (name server)
  (public_name aslp_client_server_ocaml.aslp_server)
  (modules server)
  (flags (-w -27))
- (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
- )
+ (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock lifter)
+)
 
 (library
  (name client)
