@@ -1,4 +1,12 @@
 
+
+## v0.2.0
+
+- breaking api changes:
+  - expose lwt futures
+  - move server client state out of global scope
+  - factor out the lifter interaction into new module
+
 ## v0.1.3
 
 #### aslp_client_server_ocaml:

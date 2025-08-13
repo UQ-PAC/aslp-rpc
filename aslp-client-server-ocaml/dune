@@ -5,9 +5,9 @@
   (name aslp_common)
   (public_name aslp_client_server_ocaml.aslp_common)
   (modules common)
-  (libraries lwt.unix )
+  (libraries lwt.unix asli.libASL)
   (inline_tests)
-  (preprocess (pps ppx_expect_nobase))
+  (preprocess (pps ppx_expect))
  )
 
 
@@ -18,7 +18,7 @@
  (flags (-w -27))
  (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
  (inline_tests)
- (preprocess (pps ppx_expect_nobase))
+ (preprocess (pps ppx_expect))
 )
 
 (library
@@ -28,7 +28,7 @@
  (flags (-w -27))
  (libraries aslp_common client asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock lifter)
  (inline_tests)
- (preprocess (pps ppx_expect_nobase))
+ (preprocess (pps ppx_expect))
 )
 
 (library

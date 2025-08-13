@@ -1,5 +1,6 @@
 type dis_error = { opcode : string; error : string }
 type opcode_sem = (string list, dis_error) result
+type opcode_sem_ast = (LibASL.Asl_ast.stmt list, string) result
 
 let ( let* ) = Lwt.bind
 let dis_error_to_string (s : dis_error) = s.opcode ^ " : " ^ s.error

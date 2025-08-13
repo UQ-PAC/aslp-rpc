@@ -51,7 +51,7 @@
     lwt
     ppx_expect_nobase
   )
-  (version 0.1.2)
+  (version 0.2.0)
   (source (github UQ-PAC/aslp-rpc))
   (authors "ailrst")
   (maintainers "ailrst")
