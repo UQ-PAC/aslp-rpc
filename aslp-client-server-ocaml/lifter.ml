@@ -11,6 +11,7 @@ module Opcode = struct
     Bytes.set_int32_le bytes 0 opcode;
     String.of_bytes bytes
 
+  let of_le_bytes (bytes : string) : t = String.get_int32_le bytes 0
   let of_be_bytes (bytes : string) : t = String.get_int32_be bytes 0
 
   let to_be_bytes (o : t) : string =
@@ -35,14 +36,23 @@ module Opcode = struct
   let%expect_test _ =
     let i = "0x50002680" in
     let op = of_be_hex_string i in
-    print_endline @@ i ^ " = " ^ to_hex_string op;
-    Printf.printf "%x\n" (Int32.to_int op);
-    print_endline @@ pp_bytes_le op;
+    let leb = to_le_bytes op in
+    let oleb = of_le_bytes leb in
+    let opbe = to_be_bytes op in
+    let rtbe = of_be_bytes opbe in
+    let rths = to_hex_string rtbe in
+    let reversed = bytes_reverse (bytes_reverse op) in
+    Printf.printf "oflebytes %s = %s\n" i (pp oleb);
+    Printf.printf "le bytes %s\n" @@ pp_bytes_le op;
+    Printf.printf "reverse %s = %s\n" i (to_hex_string reversed);
+    Printf.printf "of_hex to_hex %s = %s\n" i (to_hex_string op);
+    Printf.printf "%s  = %s\n" (to_hex_string op) rths;
     [%expect
-      "
-      0x50002680 = 0x50002680
-      7fffffff80260050
-      50 00 26 80"]
+      " \n\
+      \ le bytes 50 00 26 80reverse 0x50002680 = 0x50002680\n\
+      \ of_hex to_hex 0x50002680 = 0x50002680\n\
+      \ 0x50002680  = 0x50002680\n\
+      \ "]
 end
 
 module OpcodeSet = Set.Make (Int32)
@@ -88,6 +98,7 @@ module OfflineLifter : Lifter = struct
 
   let lift ?(address : int option) (opcode : Opcode.t) :
       (Asl_ast.stmt list, string) result =
+    let opcode = Opcode.bytes_reverse opcode in
     let op = Primops.mkBits 32 (Z.of_int32 opcode) in
     let& address =
       Option.to_result ~none:"Offline lifter requires opcode address set"
@@ -158,7 +169,7 @@ module Cached (L : Lifter) : CachedLifter = struct
   let get_stats () =
     {
       success = L.count_lift_success ();
-      fail = L.count_lift_success ();
+      fail = L.count_lift_failures ();
       total_lifter_calls = !cache_misses;
       cache_hit_rate = cache_hit_rate ();
       unique_failing_opcodes_le =

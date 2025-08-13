@@ -22,6 +22,9 @@ module Opcode : sig
   val pp : t -> string
   (** The same as {! to_hex_string } *)
 
+  val of_le_bytes : string -> t
+  (** get opcode from big-endian byte string *)
+
   val of_be_bytes : string -> t
   (** get opcode from big-endian byte string *)
 
