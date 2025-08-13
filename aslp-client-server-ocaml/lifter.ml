@@ -1,42 +1,48 @@
 open LibASL
 
-module Opcode : sig
-  (** Type of opcodes *)
+let asl_stmt_to_string a =
+  Utils.to_string (Asl_parser_pp.pp_raw_stmt a) |> String.trim
 
+module Opcode = struct
   type t = Int32.t
-
-  val to_hex_string : t -> string
-  (** Convert to hex string format [0xffffffff] *)
-
-  val to_le_bytes : t -> string
-  (** Convert to little-endian bytes string *)
-
-  val pp : t -> string
-  (** The same as {! to_hex_string } *)
-
-  val of_be_bytes : string -> t
-  (** get opcode from big-endian byte string *)
-
-  val pp_bytes_le : t -> string
-  (** Pretty-print {! to_le_bytes} *)
-end = struct
-  type t = Int32.t
-
-  let to_hex_string (opcode : t) : string = Printf.sprintf "0x%08lx" opcode
 
   let to_le_bytes (opcode : t) : string =
     let bytes = Bytes.create 4 in
     Bytes.set_int32_le bytes 0 opcode;
     String.of_bytes bytes
 
-  let pp = to_hex_string
   let of_be_bytes (bytes : string) : t = String.get_int32_be bytes 0
+
+  let to_be_bytes (o : t) : string =
+    let b = Bytes.create 4 in
+    Bytes.set_int32_be b 0 o;
+    Bytes.to_string b
+
+  let bytes_reverse o = to_le_bytes o |> of_be_bytes
+  let of_be_hex_string (s : string) = Int32.of_string s |> bytes_reverse
 
   let pp_bytes_le (opcode : t) : string =
     let opcode_le = to_le_bytes opcode in
     let p_byte (b : char) = Printf.sprintf "%02X" (Char.code b) in
     List.of_seq (String.to_seq opcode_le)
     |> List.map p_byte |> String.concat " "
+
+  let to_hex_string (opcode : t) : string =
+    Printf.sprintf "0x%08lx" (bytes_reverse opcode)
+
+  let pp = to_hex_string
+
+  let%expect_test _ =
+    let i = "0x50002680" in
+    let op = of_be_hex_string i in
+    print_endline @@ i ^ " = " ^ to_hex_string op;
+    Printf.printf "%x\n" (Int32.to_int op);
+    print_endline @@ pp_bytes_le op;
+    [%expect
+      "
+      0x50002680 = 0x50002680
+      7fffffff80260050
+      50 00 26 80"]
 end
 
 module OpcodeSet = Set.Make (Int32)
@@ -175,3 +181,12 @@ module Cached (L : Lifter) : CachedLifter = struct
 end
 
 module CachedOnlineLifter = Cached (OnlineLifter)
+
+let%expect_test _ =
+  CachedOnlineLifter.lift (Opcode.of_be_hex_string "0x50002680")
+  |> Result.get_ok
+  |> List.iter (fun i -> asl_stmt_to_string i |> print_endline);
+  [%expect
+    {|
+    Stmt_Assign(LExpr_Array(LExpr_Var("_R"),0),Expr_TApply("add_bits.0",[64],[Expr_Var("_PC");'0000000000000000000000000000000000000000000000000000010011010010']))
+  |}]

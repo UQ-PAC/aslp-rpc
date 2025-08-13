@@ -1,16 +1,23 @@
 (** Client connects immediately to the unix socket supplied by environment
     variable [GTIRB_SEM_SOCKET]
 
-    Otherwise the default [./aslp_rpc_socket] *)
+    Otherwise the default [./aslp_rpc_socket]
+
+    Throughout this interface opcodes are provided in big-endian byte-string
+    format.
+
+    I.e. the result of Opcode.to_be_bytes. *)
 
 open Aslp_common.Common
 
 type client
 
-val connect : ?socket_fname:string -> unit -> client
+val connect : ?socket_fname:string -> unit -> client Lwt.t
 
 val shutdown_server : client -> unit Lwt.t
 (** Send server the shutdown message *)
+
+val lift : client -> opcode_be:string -> int -> opcode_sem Lwt.t
 
 val lift_one : client -> opcode_be:string -> int -> opcode_sem
 (** Lift a single opcode

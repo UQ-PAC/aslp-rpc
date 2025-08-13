@@ -1,18 +1,21 @@
 open Aslp_common.Common
 open Lwt
 
-type client = { connection : (Lwt_io.input_channel * Lwt_io.output_channel) t }
+type client = { connection : Lwt_io.input_channel * Lwt_io.output_channel }
 
 let connect ?(socket_fname : string option) () =
-  { connection = Lwt_io.open_connection (Rpc.get_sockaddr ?socket_fname ()) }
+  let* connection =
+    Lwt_io.open_connection (Rpc.get_sockaddr ?socket_fname ())
+  in
+  Lwt.return { connection }
 
 let cin c =
-  let* ic, _ = c.connection in
+  let ic, _ = c.connection in
   if Lwt_io.is_closed ic then failwith "connection (in) closed";
   return ic
 
 let cout c =
-  let* _, oc = c.connection in
+  let _, oc = c.connection in
   if Lwt_io.is_closed oc then failwith "connection (out) closed";
   return oc
 

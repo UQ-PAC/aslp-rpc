@@ -16,12 +16,9 @@ type server = {
 module Server (L : Lifter) = struct
   let disas_result ?(address : int option) (opcode : Opcode.t) :
       (string list, dis_error) result =
-    let p_raw a =
-      Utils.to_string (Asl_parser_pp.pp_raw_stmt a) |> String.trim
-    in
     let new_error = not (OpcodeSet.mem opcode (L.unique_lift_failures ())) in
     L.lift ?address opcode
-    |> Result.map (List.map p_raw)
+    |> Result.map (List.map asl_stmt_to_string)
     |> Result.map_error (fun e ->
            let opstr = Opcode.to_hex_string opcode in
            if new_error then
@@ -29,7 +26,7 @@ module Server (L : Lifter) = struct
                "error during aslp disassembly (unsupported opcode %s, bytes \
                 %s) :: %s\n"
                opstr
-               (Opcode.to_le_bytes opcode)
+               (Opcode.pp_bytes_le opcode)
                e;
            { opcode = opstr; error = e })
 
@@ -107,12 +104,10 @@ module Server (L : Lifter) = struct
     let* s = server address in
     let* _ =
       Lwt_io.printf "Serving on domain socket GTIRB_SEM_SOCKET=%s\n"
-        (Rpc.pp_addr (Rpc.get_sockaddr ()))
+        (Rpc.pp_addr address)
     in
     Lwt_unix.on_signal Sys.sigint (fun _ -> exit 0) |> ignore;
-    Lwt_main.at_exit (fun () ->
-        print_endline "shutdown server";
-        Lwt_io.shutdown_server s.connection);
+    Lwt_main.at_exit (fun () -> Lwt_io.shutdown_server s.connection);
     Lwt.return s
 
   let shutdown (s : server) = Lwt_io.shutdown_server s.connection
@@ -134,3 +129,68 @@ let start_server ?(socket_fname : string option) () =
   OnlineServer.start_server ?socket_fname ()
 
 let shutdown_server (s : server) = OnlineServer.shutdown s
+
+let%expect_test _ =
+  let test =
+    let* s = start_server ~socket_fname:"test_socket" () in
+    shutdown_server s
+  in
+  Lwt_main.run test;
+  [%expect {|
+    Serving on domain socket GTIRB_SEM_SOCKET=test_socket
+  |}]
+
+let test_lift opcode addr =
+  let opcode = Opcode.of_be_hex_string opcode |> Opcode.to_be_bytes in
+  let test =
+    let* s = start_server () in
+    let* client = Client.connect () in
+    let* r = Client.lift client ~opcode_be:opcode addr in
+    let* _ = shutdown_server s in
+    Lwt.return (opcode_sem_to_string r)
+  in
+  print_endline @@ Lwt_main.run test
+
+let%expect_test _ =
+  test_lift "0x50002680" 0;
+  [%expect
+    {|
+    Serving on domain socket GTIRB_SEM_SOCKET=aslp_rpc_socket
+    Stmt_Assign(LExpr_Array(LExpr_Var("_R"),0),'0000000000000000000000000000000000000000000000000000010011010010')
+  |}]
+
+let%expect_test _ =
+  test_lift "0x50002680" 123456;
+  [%expect
+    {|
+    Serving on domain socket GTIRB_SEM_SOCKET=aslp_rpc_socket
+    Stmt_Assign(LExpr_Array(LExpr_Var("_R"),0),'0000000000000000000000000000000000000000000000011110011100010010')
+  |}]
+
+let%expect_test _ =
+  test_lift "0x8b031041" 0;
+  [%expect
+    {|
+    Serving on domain socket GTIRB_SEM_SOCKET=aslp_rpc_socket
+    Stmt_Assign(LExpr_Array(LExpr_Var("_R"),1),Expr_TApply("add_bits.0",[64],[Expr_Array(Expr_Var("_R"),2);Expr_TApply("append_bits.0",[60;4],[Expr_Slices(Expr_Array(Expr_Var("_R"),3),[Slice_LoWd(0,60)]);'0000'])]))
+  |}]
+
+let%expect_test _ =
+  let test =
+    let* s = start_server ~socket_fname:"aslpsocket" () in
+    let* client = Client.connect ~socket_fname:"aslpsocket" () in
+    let* r =
+      Client.lift client
+        ~opcode_be:
+          ("0x8b031041" |> Opcode.of_be_hex_string |> Opcode.to_be_bytes)
+        0
+    in
+    let* _ = shutdown_server s in
+    Lwt.return (opcode_sem_to_string r)
+  in
+  print_endline @@ Lwt_main.run test;
+  [%expect
+    {|
+    Serving on domain socket GTIRB_SEM_SOCKET=aslpsocket
+    Stmt_Assign(LExpr_Array(LExpr_Var("_R"),1),Expr_TApply("add_bits.0",[64],[Expr_Array(Expr_Var("_R"),2);Expr_TApply("append_bits.0",[60;4],[Expr_Slices(Expr_Array(Expr_Var("_R"),3),[Slice_LoWd(0,60)]);'0000'])]))
+  |}]

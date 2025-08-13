@@ -1,5 +1,7 @@
 open LibASL
 
+val asl_stmt_to_string : Asl_ast.stmt -> string
+
 module Opcode : sig
   (** Type of opcodes *)
 
@@ -8,7 +10,13 @@ module Opcode : sig
   val to_hex_string : t -> string
   (** Convert to hex string format [0xffffffff] *)
 
+  val of_be_hex_string : string -> t
+  (** Convert to hex string format [0xffffffff] *)
+
   val to_le_bytes : t -> string
+  (** Convert to little-endian bytes string *)
+
+  val to_be_bytes : t -> string
   (** Convert to little-endian bytes string *)
 
   val pp : t -> string
