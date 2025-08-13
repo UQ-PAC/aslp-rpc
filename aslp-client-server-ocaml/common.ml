@@ -6,15 +6,18 @@ let ( let* ) = Lwt.bind
 module Rpc = struct
   let message_count = ref 0
 
-  let sockfpath =
-    ref
-    @@
-    match Sys.getenv_opt "GTIRB_SEM_SOCKET" with
-    | Some x -> x
-    | None -> "aslp_rpc_socket"
+  let get_sockaddr ?(socket_fname : string option) () =
+    Option.to_list socket_fname
+    @ Option.to_list (Sys.getenv_opt "GTIRB_SEM_SOCKET")
+    @ [ "aslp_rpc_socket" ]
+    |> List.hd
+    |> fun a -> Lwt_unix.ADDR_UNIX a
 
-  let set_addr sockaddr = sockfpath := sockaddr
-  let sockaddr () = Lwt_unix.ADDR_UNIX !sockfpath
+  let pp_addr a =
+    match a with
+    | Lwt_unix.ADDR_UNIX a -> a
+    | Lwt_unix.ADDR_INET (a, b) ->
+        Unix.string_of_inet_addr a ^ ":" ^ Int.to_string b
 
   type msg_call =
     | Shutdown

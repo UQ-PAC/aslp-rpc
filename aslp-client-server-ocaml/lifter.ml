@@ -1,7 +1,4 @@
-open Aslp_common.Common
 open LibASL
-
-exception LifterError of string
 
 module Opcode : sig
   (** Type of opcodes *)
@@ -44,6 +41,8 @@ end
 
 module OpcodeSet = Set.Make (Int32)
 
+let ( let& ) = Result.bind
+
 module type LifterStat = sig
   val unique_lift_failures : unit -> OpcodeSet.t
   val count_lift_failures : unit -> int
@@ -68,37 +67,27 @@ module Stats = struct
   let count_lift_failures () = !decode_instr_fail
   let count_lift_success () = !decode_instr_success
 
-  let protect opcode f =
-    (try Ok (f ())
-     with e ->
-       Error
-         { opcode = Opcode.to_hex_string opcode; error = Printexc.to_string e })
-    |> count_res
+  let protect f =
+    (try Ok (f ()) with e -> Error (Printexc.to_string e)) |> count_res
 end
 
 module type Lifter = sig
   include LifterStat
 
-  val lift : ?address:int -> Opcode.t -> (Asl_ast.stmt list, dis_error) result
+  val lift : ?address:int -> Opcode.t -> (Asl_ast.stmt list, string) result
 end
 
 module OfflineLifter : Lifter = struct
   include Stats
 
   let lift ?(address : int option) (opcode : Opcode.t) :
-      (Asl_ast.stmt list, dis_error) result =
+      (Asl_ast.stmt list, string) result =
     let op = Primops.mkBits 32 (Z.of_int32 opcode) in
-    let address =
-      Option.to_result
-        ~none:
-          {
-            opcode = Opcode.to_hex_string opcode;
-            error = "Offline lifter requires opcode address set";
-          }
+    let& address =
+      Option.to_result ~none:"Offline lifter requires opcode address set"
         address
     in
-    Result.bind address (fun address ->
-        protect opcode (fun () -> OfflineASL_pc.Offline.run ~pc:address op))
+    protect (fun () -> OfflineASL_pc.Offline.run ~pc:address op)
 end
 
 module OnlineLifter : Lifter = struct
@@ -106,28 +95,19 @@ module OnlineLifter : Lifter = struct
 
   let env =
     lazy
-      (match Arm_env.aarch64_evaluation_environment () with
-      | Some e -> e
-      | None ->
-          raise
-            (LifterError
-               "unable to load bundled asl files. has aslp been installed \
-                correctly?"))
+      (Arm_env.aarch64_evaluation_environment ()
+      |> Option.to_result
+           ~none:
+             "unable to load bundled asl files. has aslp been installed \
+              correctly?")
 
   let lift ?(address : int option) (opcode : Opcode.t) :
-      (Asl_ast.stmt list, dis_error) result =
+      (Asl_ast.stmt list, string) result =
     let address = Option.map string_of_int address in
-    (* below, opnum is the numeric opcode (necessarily BE) and opcode_* are always LE. *)
-    (* TODO: change argument of to_asli to follow this convention. *)
-    let l () =
-      Dis.retrieveDisassembly ?address (Lazy.force env)
-        (Dis.build_env (Lazy.force env))
-        (Opcode.to_hex_string opcode)
-    in
-    try Ok (l ())
-    with e ->
-      Error
-        { opcode = Opcode.to_hex_string opcode; error = Printexc.to_string e }
+    let& env = Lazy.force env in
+    protect (fun () ->
+        Dis.retrieveDisassembly ?address env (Dis.build_env env)
+          (Opcode.to_hex_string opcode))
 end
 
 module CK = struct
@@ -180,7 +160,7 @@ module Cached (L : Lifter) : CachedLifter = struct
     }
 
   let lift ?(address : int option) (opcode : Opcode.t) :
-      (Asl_ast.stmt list, dis_error) result =
+      (Asl_ast.stmt list, string) result =
     let k = (opcode, address) in
     let x = Cache.find_opt aches_cache k in
     match x with

@@ -1,27 +1,29 @@
 open Aslp_common.Common
 open Lwt
 
-let connection = lazy (Lwt_io.open_connection @@ Rpc.sockaddr ())
-let set_addr ~filename = Rpc.set_addr filename
+type client = { connection : (Lwt_io.input_channel * Lwt_io.output_channel) t }
 
-let cin () =
-  let* ic, _ = Lazy.force connection in
+let connect ?(socket_fname : string option) () =
+  { connection = Lwt_io.open_connection (Rpc.get_sockaddr ?socket_fname ()) }
+
+let cin c =
+  let* ic, _ = c.connection in
   if Lwt_io.is_closed ic then failwith "connection (in) closed";
   return ic
 
-let cout () =
-  let* _, oc = Lazy.force connection in
+let cout c =
+  let* _, oc = c.connection in
   if Lwt_io.is_closed oc then failwith "connection (out) closed";
   return oc
 
-let shutdown_server () =
-  let* cout = cout () in
+let shutdown_server c =
+  let* cout = cout c in
   let m : Rpc.msg_call = Shutdown in
   Lwt_io.write_value cout m
 
-let lift ~(opcode_be : string) (addr : int) =
-  let* cout = cout () in
-  let* cin = cin () in
+let lift c ~(opcode_be : string) (addr : int) =
+  let* cout = cout c in
+  let* cin = cin c in
   let cm : Rpc.msg_call = Lift { opcode_be; addr } in
   let* () = Lwt_io.write_value cout cm in
   let* resp : Rpc.msg_resp = Lwt_io.read_value cin in
@@ -29,13 +31,13 @@ let lift ~(opcode_be : string) (addr : int) =
   | Ok x -> return x
   | All _ -> Lwt.fail_with "did not expect multi response"
 
-let lift_one ~(opcode_be : string) (addr : int) =
-  Lwt_main.run (lift ~opcode_be addr)
+let lift_one c ~(opcode_be : string) (addr : int) =
+  Lwt_main.run (lift c ~opcode_be addr)
 
-let lift_multi ~(opcodes : (string * int) list) : opcode_sem list Lwt.t =
+let lift_multi c ~(opcodes : (string * int) list) : opcode_sem list Lwt.t =
   let* lift_m =
-    let* cout = cout () in
-    let* cin = cin () in
+    let* cout = cout c in
+    let* cin = cin c in
     let cm : Rpc.msg_call = LiftAll opcodes in
     let* () = Lwt_io.write_value cout cm in
     let* resp : Rpc.msg_resp = Lwt_io.read_value cin in

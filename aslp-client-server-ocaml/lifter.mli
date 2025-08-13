@@ -1,4 +1,3 @@
-open Aslp_common.Common
 open LibASL
 
 module Opcode : sig
@@ -28,7 +27,7 @@ module type Lifter = sig
   val unique_lift_failures : unit -> OpcodeSet.t
   val count_lift_failures : unit -> int
   val count_lift_success : unit -> int
-  val lift : ?address:int -> Opcode.t -> (Asl_ast.stmt list, dis_error) result
+  val lift : ?address:int -> Opcode.t -> (Asl_ast.stmt list, string) result
 end
 
 type stats = {
