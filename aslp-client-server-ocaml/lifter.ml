@@ -6,6 +6,8 @@ let asl_stmt_to_string a =
 module Opcode = struct
   type t = Int32.t
 
+  let compare = Int32.compare
+
   let to_le_bytes (opcode : t) : string =
     let bytes = Bytes.create 4 in
     Bytes.set_int32_le bytes 0 opcode;
@@ -25,8 +27,6 @@ module Opcode = struct
   (** Private *)
   let pp_byte (b : char) = Printf.sprintf "%02X" (Char.code b)
 
-  (** (Private) Formats the given byte string into hexadecimal, with bytes
-      separated by the given separator. *)
   let pp_bytes ?(sep = " ") (bytes : string) =
     String.fold_right (fun c acc -> pp_byte c :: acc) bytes []
     |> String.concat sep
@@ -36,35 +36,15 @@ module Opcode = struct
 
   let to_be_hex_string (opcode : t) : string =
     to_be_bytes opcode
-      |> pp_bytes ~sep:" "
+      |> pp_bytes ~sep:""
       |> String.lowercase_ascii
       |> String.cat "0x"
 
   let pp = to_be_hex_string
 
-  let%expect_test _ =
-    let i = "0x50002680" in
-    let op = of_be_hex_string i in
-    let leb = to_le_bytes op in
-    let oleb = of_le_bytes leb in
-    let opbe = to_be_bytes op in
-    let rtbe = of_be_bytes opbe in
-    let rths = to_be_hex_string rtbe in
-    let reversed = bytes_reverse (bytes_reverse op) in
-    Printf.printf "oflebytes %s = %s\n" i (pp oleb);
-    Printf.printf "le bytes %s\n" @@ pp_bytes_le op;
-    Printf.printf "reverse %s = %s\n" i (to_be_hex_string reversed);
-    Printf.printf "of_hex to_hex %s = %s\n" i (to_be_hex_string op);
-    Printf.printf "%s  = %s\n" (to_be_hex_string op) rths;
-    [%expect
-      " \n\
-      \ le bytes 50 00 26 80reverse 0x50002680 = 0x50002680\n\
-      \ of_hex to_hex 0x50002680 = 0x50002680\n\
-      \ 0x50002680  = 0x50002680\n\
-      \ "]
 end
 
-module OpcodeSet = Set.Make (Int32)
+module OpcodeSet = Set.Make(Opcode)
 
 let ( let& ) = Result.bind
 
@@ -202,11 +182,3 @@ end
 
 module CachedOnlineLifter = Cached (OnlineLifter)
 
-let%expect_test _ =
-  CachedOnlineLifter.lift (Opcode.of_be_hex_string "0x50002680")
-  |> Result.get_ok
-  |> List.iter (fun i -> asl_stmt_to_string i |> print_endline);
-  [%expect
-    {|
-    Stmt_Assign(LExpr_Array(LExpr_Var("_R"),0),Expr_TApply("add_bits.0",[64],[Expr_Var("_PC");'0000000000000000000000000000000000000000000000000000010011010010']))
-  |}]

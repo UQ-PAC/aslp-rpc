@@ -16,7 +16,7 @@ depends: [
   "asli"
   "aslp_offline"
   "lwt"
-  "ppx_expect_nobase"
+  "ppx_expect"
   "odoc" {with-doc}
 ]
 build: [

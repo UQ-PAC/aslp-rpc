@@ -9,7 +9,7 @@
 
 (documentation https://uq-pac.github.io/aslp-rpc/)
 
-(package 
+(package
   (name aslp-rpc)
   (synopsis "ASLp RPC libraries")
   (version 0.1.0)
@@ -49,7 +49,7 @@
     asli
     aslp_offline
     lwt
-    ppx_expect_nobase
+    ppx_expect
   )
   (version 0.2.0)
   (source (github UQ-PAC/aslp-rpc))

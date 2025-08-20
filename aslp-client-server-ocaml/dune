@@ -1,7 +1,7 @@
 
 
 
-(library 
+(library
   (name aslp_common)
   (public_name aslp_client_server_ocaml.aslp_common)
   (modules common)
@@ -17,9 +17,14 @@
  (modules lifter)
  (flags (-w -27))
  (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
- (inline_tests)
- (preprocess (pps ppx_expect))
 )
+
+(library
+ (name lifter_tests)
+ (libraries lifter)
+ (modules lifter_tests)
+ (inline_tests)
+ (preprocess (pps ppx_expect)))
 
 (library
  (name server)

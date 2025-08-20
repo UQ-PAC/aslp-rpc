@@ -11,8 +11,10 @@ module Opcode : sig
 
       No other guarantees are given about its internal representation. *)
 
+  val compare : t -> t -> int
+
   val to_be_hex_string : t -> string
-  (** Convert to hex string format [0xffffffff] *)
+  (** Convert to hex string format [0xffffffff], with padding *)
 
   val of_be_hex_string : string -> t
   (** Parse from hex string format [0xffffffff] *)
@@ -27,6 +29,10 @@ module Opcode : sig
   (** Default pretty printer for {!Opcode.t}.
 
       Currently produces the same format as {!to_be_hex_string}. *)
+
+  val pp_bytes : ?sep:string -> string -> string
+  (** Formats the given byte string into hexadecimal, with bytes
+      separated by the given separator. *)
 
   val of_le_bytes : string -> t
   (** Parse from little-endian byte string *)
