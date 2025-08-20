@@ -21,7 +21,6 @@ module Opcode = struct
     Bytes.set_int32_be b 0 o;
     Bytes.to_string b
 
-  let bytes_reverse o = to_le_bytes o |> of_be_bytes
   let of_be_hex_string = Int32.of_string
 
   (** Private *)
@@ -87,7 +86,6 @@ module OfflineLifter : Lifter = struct
 
   let lift ?(address : int option) (opcode : Opcode.t) :
       (Asl_ast.stmt list, string) result =
-    let opcode = Opcode.bytes_reverse opcode in
     let op = Primops.mkBits 32 (Z.of_int32 opcode) in
     let& address =
       Option.to_result ~none:"Offline lifter requires opcode address set"

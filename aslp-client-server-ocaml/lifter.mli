@@ -45,8 +45,6 @@ module Opcode : sig
       with bytes in little-endian order and space-separated.
 
       For example, [A1 B2 C3 D4]. *)
-
-  val bytes_reverse : t -> t [@@deprecated "Opcode.bytes_reverse is inconsistent and deprecated."]
 end
 
 module OpcodeSet : Set.S with type elt = Opcode.t
