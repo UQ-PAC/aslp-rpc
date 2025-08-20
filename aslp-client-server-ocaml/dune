@@ -7,7 +7,7 @@
   (modules common)
   (libraries lwt.unix asli.libASL)
   (inline_tests)
-  (preprocess (pps ppx_expect))
+  (preprocess (pps ppx_expect_nobase))
  )
 
 
@@ -24,7 +24,7 @@
  (libraries lifter)
  (modules lifter_tests)
  (inline_tests)
- (preprocess (pps ppx_expect)))
+ (preprocess (pps ppx_expect_nobase)))
 
 (library
  (name server)
@@ -33,7 +33,7 @@
  (flags (-w -27))
  (libraries aslp_common client asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock lifter)
  (inline_tests)
- (preprocess (pps ppx_expect))
+ (preprocess (pps ppx_expect_nobase))
 )
 
 (library

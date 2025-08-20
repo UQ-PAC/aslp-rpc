@@ -49,7 +49,7 @@
     asli
     aslp_offline
     lwt
-    ppx_expect
+    (ppx_expect_nobase (>= "0.17.2.2"))
   )
   (version 0.2.0)
   (source (github UQ-PAC/aslp-rpc))

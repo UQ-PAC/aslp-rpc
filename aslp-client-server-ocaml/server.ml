@@ -136,7 +136,7 @@ let%expect_test _ =
     shutdown_server s
   in
   Lwt_main.run test;
-  [%expect {| |}]
+  [%expect {| Serving on domain socket GTIRB_SEM_SOCKET=test_socket |}]
 
 let test_lift opcode addr =
   let opcode = Opcode.of_be_hex_string opcode |> Opcode.to_be_bytes in
@@ -153,7 +153,6 @@ let%expect_test _ =
   test_lift "0x50002680" 0;
   [%expect
     {|
-    Serving on domain socket GTIRB_SEM_SOCKET=test_socket
     Serving on domain socket GTIRB_SEM_SOCKET=aslp_rpc_socket
     Stmt_Assign(LExpr_Array(LExpr_Var("_R"),0),'0000000000000000000000000000000000000000000000000000010011010010')
     |}]
