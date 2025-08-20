@@ -34,10 +34,7 @@ module Opcode = struct
     to_le_bytes opcode |> pp_bytes
 
   let to_be_hex_string (opcode : t) : string =
-    to_be_bytes opcode
-      |> pp_bytes ~sep:""
-      |> String.lowercase_ascii
-      |> String.cat "0x"
+    Printf.sprintf "0x%08lx" opcode
 
   let pp = to_be_hex_string
 
