@@ -5,34 +5,45 @@ val asl_stmt_to_string : Asl_ast.stmt -> string
 module Opcode : sig
   (** Type of opcodes *)
 
-  type t = Int32.t
+  type t
+  (** An Opcode is represented as an opaque type sufficient to hold
+      at least 32 bits.
 
-  val to_hex_string : t -> string
+      No other guarantees are given about its internal representation. *)
+
+  val to_be_hex_string : t -> string
   (** Convert to hex string format [0xffffffff] *)
 
   val of_be_hex_string : string -> t
-  (** Convert to hex string format [0xffffffff] *)
+  (** Parse from hex string format [0xffffffff] *)
 
   val to_le_bytes : t -> string
   (** Convert to little-endian bytes string *)
 
   val to_be_bytes : t -> string
-  (** Convert to little-endian bytes string *)
+  (** Convert to big-endian bytes string *)
 
   val pp : t -> string
-  (** The same as {! to_hex_string } *)
+  (** Default pretty printer for {!Opcode.t}.
+
+      Currently produces the same format as {!to_be_hex_string}. *)
 
   val of_le_bytes : string -> t
-  (** get opcode from big-endian byte string *)
+  (** Parse from little-endian byte string *)
 
   val of_be_bytes : string -> t
-  (** get opcode from big-endian byte string *)
+  (** Parse from big-endian byte string *)
 
   val pp_bytes_le : t -> string
-  (** Pretty-print {! to_le_bytes} *)
+  (** Formats opcode with each byte represented by a pair of hexadecimal digits,
+      with bytes in little-endian order and space-separated.
+
+      For example, [A1 B2 C3 D4]. *)
+
+  val bytes_reverse : t -> t [@@deprecated "Opcode.bytes_reverse is inconsistent and deprecated."]
 end
 
-module OpcodeSet : Set.S with type elt = int32
+module OpcodeSet : Set.S with type elt = Opcode.t
 
 module type Lifter = sig
   val unique_lift_failures : unit -> OpcodeSet.t

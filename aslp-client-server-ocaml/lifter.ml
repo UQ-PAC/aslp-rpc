@@ -20,18 +20,27 @@ module Opcode = struct
     Bytes.to_string b
 
   let bytes_reverse o = to_le_bytes o |> of_be_bytes
-  let of_be_hex_string (s : string) = Int32.of_string s |> bytes_reverse
+  let of_be_hex_string = Int32.of_string
+
+  (** Private *)
+  let pp_byte (b : char) = Printf.sprintf "%02X" (Char.code b)
+
+  (** (Private) Formats the given byte string into hexadecimal, with bytes
+      separated by the given separator. *)
+  let pp_bytes ?(sep = " ") (bytes : string) =
+    String.fold_right (fun c acc -> pp_byte c :: acc) bytes []
+    |> String.concat sep
 
   let pp_bytes_le (opcode : t) : string =
-    let opcode_le = to_le_bytes opcode in
-    let p_byte (b : char) = Printf.sprintf "%02X" (Char.code b) in
-    List.of_seq (String.to_seq opcode_le)
-    |> List.map p_byte |> String.concat " "
+    to_le_bytes opcode |> pp_bytes
 
-  let to_hex_string (opcode : t) : string =
-    Printf.sprintf "0x%08lx" (bytes_reverse opcode)
+  let to_be_hex_string (opcode : t) : string =
+    to_be_bytes opcode
+      |> pp_bytes ~sep:" "
+      |> String.lowercase_ascii
+      |> String.cat "0x"
 
-  let pp = to_hex_string
+  let pp = to_be_hex_string
 
   let%expect_test _ =
     let i = "0x50002680" in
@@ -40,13 +49,13 @@ module Opcode = struct
     let oleb = of_le_bytes leb in
     let opbe = to_be_bytes op in
     let rtbe = of_be_bytes opbe in
-    let rths = to_hex_string rtbe in
+    let rths = to_be_hex_string rtbe in
     let reversed = bytes_reverse (bytes_reverse op) in
     Printf.printf "oflebytes %s = %s\n" i (pp oleb);
     Printf.printf "le bytes %s\n" @@ pp_bytes_le op;
-    Printf.printf "reverse %s = %s\n" i (to_hex_string reversed);
-    Printf.printf "of_hex to_hex %s = %s\n" i (to_hex_string op);
-    Printf.printf "%s  = %s\n" (to_hex_string op) rths;
+    Printf.printf "reverse %s = %s\n" i (to_be_hex_string reversed);
+    Printf.printf "of_hex to_hex %s = %s\n" i (to_be_hex_string op);
+    Printf.printf "%s  = %s\n" (to_be_hex_string op) rths;
     [%expect
       " \n\
       \ le bytes 50 00 26 80reverse 0x50002680 = 0x50002680\n\
@@ -124,7 +133,7 @@ module OnlineLifter : Lifter = struct
     let& env = Lazy.force env in
     protect (fun () ->
         Dis.retrieveDisassembly ?address env (Dis.build_env env)
-          (Opcode.to_hex_string opcode))
+          (Opcode.to_be_hex_string opcode))
 end
 
 module CK = struct

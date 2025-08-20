@@ -20,7 +20,7 @@ module Server (L : Lifter) = struct
     L.lift ?address opcode
     |> Result.map (List.map asl_stmt_to_string)
     |> Result.map_error (fun e ->
-           let opstr = Opcode.to_hex_string opcode in
+           let opstr = Opcode.to_be_hex_string opcode in
            if new_error then
              Printf.eprintf
                "error during aslp disassembly (unsupported opcode %s, bytes \
