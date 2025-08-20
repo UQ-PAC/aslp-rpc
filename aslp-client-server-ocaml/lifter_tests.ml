@@ -28,11 +28,17 @@ let%expect_test "opcode round trip" =
   print_endline @@ pp @@ of_be_bytes @@ to_be_bytes op;
   [%expect {| 0x1234abcd |}]
 
-let%expect_test "opcode edge cases" =
+let%expect_test "opcode extra cases" =
   (* make sure opcode does not treat "negative" numbers
      differently. *)
   print_endline @@ pp @@ of_be_hex_string "0xfffffff0";
-  [%expect {| 0xfffffff0 |}]
+  [%expect {| 0xfffffff0 |}];
+
+  (* test parsing of byte strings *)
+  print_endline @@ pp @@ of_le_bytes "\xcd\xab\x34\x12";
+  [%expect {| 0x1234abcd |}];
+  print_endline @@ pp @@ of_be_bytes "\x12\x34\xab\xcd";
+  [%expect {| 0x1234abcd |}]
 
 let pp_result = function
   | Ok xs -> Printf.printf "ok: [%s]\n" @@ String.concat ";\n" @@ List.map asl_stmt_to_string xs
