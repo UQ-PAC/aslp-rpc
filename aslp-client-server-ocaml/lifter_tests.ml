@@ -34,6 +34,10 @@ let%expect_test "opcode extra cases" =
   print_endline @@ pp @@ of_be_hex_string "0xfffffff0";
   [%expect {| 0xfffffff0 |}];
 
+  (* left padding *)
+  print_endline @@ to_be_hex_string @@ of_be_hex_string "0x00000001";
+  [%expect {| 0x00000001 |}];
+
   (* test parsing of byte strings *)
   print_endline @@ pp @@ of_le_bytes "\xcd\xab\x34\x12";
   [%expect {| 0x1234abcd |}];
