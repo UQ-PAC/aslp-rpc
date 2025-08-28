@@ -133,7 +133,8 @@ let shutdown_server (s : server) = OnlineServer.shutdown s
 let%expect_test _ =
   let test =
     let* s = start_server ~socket_fname:"test_socket" () in
-    shutdown_server s
+    let* _ = shutdown_server s in
+    Lwt_io.flush Lwt_io.stdout
   in
   Lwt_main.run test;
   [%expect {| Serving on domain socket GTIRB_SEM_SOCKET=test_socket |}]
@@ -145,9 +146,11 @@ let test_lift opcode addr =
     let* client = Client.connect () in
     let* r = Client.lift client ~opcode_be:opcode addr in
     let* _ = shutdown_server s in
-    Lwt.return (opcode_sem_to_string r)
+    let* _ = Lwt_io.printf "%s\n" (opcode_sem_to_string r) in
+    Lwt_io.flush Lwt_io.stdout
   in
-  print_endline @@ Lwt_main.run test
+  Lwt_main.run test;
+  flush_all ()
 
 let%expect_test _ =
   test_lift "0x50002680" 0;
@@ -184,9 +187,10 @@ let%expect_test _ =
         0
     in
     let* _ = shutdown_server s in
-    Lwt.return (opcode_sem_to_string r)
+    let* _ = Lwt_io.printl (opcode_sem_to_string r) in
+    Lwt_io.flush Lwt_io.stdout
   in
-  print_endline @@ Lwt_main.run test;
+  Lwt_main.run test;
   [%expect
     {|
     Serving on domain socket GTIRB_SEM_SOCKET=aslpsocket
