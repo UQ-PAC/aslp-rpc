@@ -1,23 +1,45 @@
 
-(library 
+
+
+(library
   (name aslp_common)
   (public_name aslp_client_server_ocaml.aslp_common)
   (modules common)
-  (libraries lwt.unix )
-  )
+  (libraries lwt.unix asli.libASL)
+  (inline_tests)
+  (preprocess (pps ppx_expect_nobase))
+ )
+
+
+(library
+ (name lifter)
+ (public_name aslp_client_server_ocaml.lifter)
+ (modules lifter)
+ (flags (-w -27))
+ (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
+)
+
+(library
+ (name lifter_tests)
+ (libraries lifter)
+ (modules lifter_tests)
+ (inline_tests)
+ (preprocess (pps ppx_expect_nobase)))
 
 (library
  (name server)
  (public_name aslp_client_server_ocaml.aslp_server)
  (modules server)
  (flags (-w -27))
- (libraries aslp_common asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock aches.vache)
- )
+ (libraries aslp_common client asli.libASL aslp_offline.pc_aarch64 lwt.unix mtime mtime.clock lifter)
+ (inline_tests)
+ (preprocess (pps ppx_expect_nobase))
+)
 
 (library
  (name client)
  (public_name aslp_client_server_ocaml.aslp_client)
  (modules client)
- (libraries aslp_common asli.libASL lwt.unix mtime mtime.clock)
+ (libraries aslp_common lwt.unix mtime mtime.clock)
 )
 

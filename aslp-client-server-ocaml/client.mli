@@ -1,24 +1,31 @@
 (** Client connects immediately to the unix socket supplied by environment
     variable [GTIRB_SEM_SOCKET]
 
-    Otherwise the default [./aslp_rpc_socket] *)
+    Otherwise the default [./aslp_rpc_socket]
+
+    Throughout this interface opcodes are provided in big-endian byte-string
+    format.
+
+    I.e. the result of Opcode.to_be_bytes. *)
 
 open Aslp_common.Common
 
-val set_addr : filename:string -> unit
-(** Set the address (unix socket filename) to connect to (must be called before
-    first call to lift) Overrides the environment variable. *)
+type client
 
-val shutdown_server : unit -> unit Lwt.t
+val connect : ?socket_fname:string -> unit -> client Lwt.t
+
+val shutdown_server : client -> unit Lwt.t
 (** Send server the shutdown message *)
 
-val lift_one : opcode_be:string -> int -> opcode_sem
+val lift : client -> opcode_be:string -> int -> opcode_sem Lwt.t
+
+val lift_one : client -> opcode_be:string -> int -> opcode_sem
 (** Lift a single opcode
 
     @param opcode_be the opcode in the format "0xffffff" (big endian)
     @param int the pc address of the opcode *)
 
-val lift_multi : opcodes:(string * int) list -> opcode_sem list Lwt.t
+val lift_multi : client -> opcodes:(string * int) list -> opcode_sem list Lwt.t
 (** Lift a batch of (opcode, pc-address) pairs and return a list of the
     corresponding results in order.
 
