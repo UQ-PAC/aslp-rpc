@@ -22,7 +22,7 @@ let eval_instr (opcode : string) : string * string =
   let decoder = Eval.Env.getDecoder env' (Ident "A64") in
   if (!verbose_opt) then Eio.traceln "lifting %s" opcode ;
   let enc, stmts =
-    Dis.dis_decode_entry_with_inst env' lenv decoder (Z.of_string opcode)
+    Dis.dis_decode_entry_with_inst env' lenv decoder (Symbolic.sym_bits_of_string opcode)
   in
 
   let stmts' = List.map pp_raw stmts in
@@ -66,17 +66,17 @@ let get_resp (opcode : string) : Cohttp.Code.status_code * string =
 
 (* Paralellism Structure
 
-   We have one cohttp request handler domain and an executor pool of 
-   workers doing opcode lifting across possibly multiple domains. 
+   We have one cohttp request handler domain and an executor pool of
+   workers doing opcode lifting across possibly multiple domains.
 
-   Basic benchmarks show that cohttp-eio is able to handle 
+   Basic benchmarks show that cohttp-eio is able to handle
    >100000 request/second when not doing any work, so in our case
-   we are sufficiently compute-bound that multithreading the 
+   we are sufficiently compute-bound that multithreading the
    request handler has no impact.
 *)
 
 let submit_req_executor_pool pool opcode =
-  Atomic.incr count; 
+  Atomic.incr count;
   Eio.Executor_pool.submit_exn pool ~weight:0.001 (fun () -> get_resp opcode)
 
 (* Request handling *)
@@ -150,7 +150,7 @@ let () =
             (Uri.of_string
                (Printf.sprintf "http://%s:%d/?opcode=die" !addr_opt !port_opt))
           |> ignore
-        with | Failure x -> Eio.traceln "%s" x  
+        with | Failure x -> Eio.traceln "%s" x
       in
       ()
     in
