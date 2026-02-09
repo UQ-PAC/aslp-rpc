@@ -1,4 +1,5 @@
 (lang dune 3.6)
+(version 0.1.3)
 
 (name aslp-rpc)
 
@@ -9,10 +10,9 @@
 
 (documentation https://uq-pac.github.io/aslp-rpc/)
 
-(package 
+(package
   (name aslp-rpc)
   (synopsis "ASLp RPC libraries")
-  (version 0.1.0)
   (authors "ailrst")
   (maintainers "ailrst")
   (license Apache-2.0)
@@ -23,7 +23,6 @@
  (name aslp_server_http)
  (documentation https://uq-pac.github.io/aslp-rpc/aslp_server_http)
  (synopsis "REST server for ASLp")
- (version 0.1.0)
  (authors "ailrst")
  (maintainers "ailrst")
  (source (github UQ-PAC/aslp-rpc))
@@ -35,7 +34,7 @@
     "cohttp-eio"
     "eio_main"
     "yojson"
-    "asli"
+   ("asli" (>= 0.3.2))
  )
 )
 
@@ -50,7 +49,6 @@
     aslp_offline
     lwt
   )
-  (version 0.1.2)
   (source (github UQ-PAC/aslp-rpc))
   (authors "ailrst")
   (maintainers "ailrst")
