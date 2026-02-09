@@ -1,5 +1,8 @@
+## v0.1.4 (2026-02-09)
 
-## v0.1.3 (2026-02-09)
+- support aslp after symbolic opcodes
+
+## v0.1.3 (2025-02-05)
 
 #### aslp_client_server_ocaml:
 
@@ -9,7 +12,6 @@
 #### aslp_server_http
 
 - remove pin dependencies
-- support aslp after symbolic opcodes
 
 ## v0.1.2 (2024-02-05)
 

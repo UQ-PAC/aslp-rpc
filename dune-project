@@ -1,5 +1,5 @@
 (lang dune 3.6)
-(version 0.1.3)
+(version 0.1.4)
 
 (name aslp-rpc)
 
