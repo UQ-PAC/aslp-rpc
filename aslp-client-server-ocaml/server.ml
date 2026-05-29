@@ -145,7 +145,7 @@ let lift_opcode ?(cache = true) ~(opcode : Opcode.t) (addr : int) :
 let lift_opcode_offline_lifter ~(opcode : Opcode.t) (addr : int) :
     (string list, dis_error) result =
   let op = Primops.mkBits 32 (Z.of_int32 opcode) in
-  let do_dis () = OfflineASL_pc.Offline.run ~pc:addr op in
+  let do_dis () = OfflineASL_pc_runner.run ~pc:addr op in
   InsnLifter.disas_result ~opcode do_dis |> InsnLifter.count_res
 
 module Server = struct

@@ -1,3 +1,7 @@
+## v0.1.5 (2026-05-29)
+
+- use pre-generated `aslp_lifter_ocaml` package
+
 ## v0.1.4 (2026-02-09)
 
 - support aslp after symbolic opcodes

@@ -1,5 +1,5 @@
 (lang dune 3.6)
-(version 0.1.4)
+(version 0.1.5)
 
 (name aslp-rpc)
 
@@ -46,7 +46,7 @@
     mtime
     aches
     asli
-    aslp_offline
+    aslp_lifter_ocaml
     lwt
   )
   (source (github UQ-PAC/aslp-rpc))
